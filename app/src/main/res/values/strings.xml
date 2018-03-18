@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Distroid</string>
+    <string name="distributed_file_system_for_android_os">Distributed File System for Android OS.</string>
+    <string name="key_backup_directory">key_backup_directory</string>
+    <string name="key_upload_frequency">key_upload_frequency</string>
+    <string name="key_storage_threshold">key_storage_threshold</string>
+    <string name="key_shared_storage">key_shared_storage</string>
+</resources>

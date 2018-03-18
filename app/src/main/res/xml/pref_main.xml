@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:defaultValue="DistroidTest"
+        android:key="@string/key_backup_directory"
+        android:summary="Enter the directory to backup distroid"
+        android:title="Backup Directory" />
+    <EditTextPreference
+        android:defaultValue="5"
+        android:key="@string/key_upload_frequency"
+        android:summary="Enter the upload frequency in minutes"
+        android:title="Upload Frequency (mins)" />
+
+    <EditTextPreference
+        android:defaultValue="90"
+        android:key="@string/key_storage_threshold"
+        android:summary="Percentage of storage used to trigger backup"
+        android:title="Storage Threshold (%)"
+        android:inputType="number"
+        />
+    <EditTextPreference
+        android:defaultValue="100"
+        android:key="@string/key_shared_storage"
+        android:summary="Amount of storage to share in MB"
+        android:title="Storage to share (MB)"
+        android:inputType="number"
+        />
+
+</PreferenceScreen>
