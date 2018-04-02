@@ -2,6 +2,7 @@ package in.frisc.distroid;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -9,10 +10,17 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
+
+import java.io.File;
+import java.security.SecureRandom;
+import java.util.concurrent.ThreadLocalRandom;
+
+import in.frisc.distroid.utils.RandomString;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,14 +46,35 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, DistroidService.class);
             startService(intent);
         }
+
+        // Key generation code
         if(sharedPreferences.getString("secret_key","NONE").equals("NONE")){
 
             Toast.makeText(mContext, "Created secret key!", Toast.LENGTH_SHORT).show();
-            sharedPreferences.edit().putString("secret_key","UISFDUYBIUEWFBUWFBUYWDVFTYFVYE").apply();
+            RandomString gen = new RandomString(32, new SecureRandom());
+            sharedPreferences.edit().putString("secret_key", gen.nextString()).apply();
 
+            AlertDialog alertDialog = new AlertDialog.Builder(mContext).create();
+            alertDialog.setTitle("Key Generated");
+            alertDialog.setMessage("Device initiated with Distroid!. Private key generated and stored securely.");
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Ok",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
         }
 
-
+        final String folderName = sharedPreferences.getString(getString(R.string.key_backup_directory), "DistroidTest");
+        Toast.makeText(getApplicationContext(), "Service started", Toast.LENGTH_SHORT).show();
+        String folderPath = android.os.Environment.getExternalStorageDirectory().toString() + "/" + folderName;
+        File directory = new File(folderPath);
+        if (! directory.exists()){
+            directory.mkdir();
+            // If you require it to make the entire directory path including parents,
+            // use directory.mkdirs(); here instead.
+        }
         Utils.getNetworkIPs();
     }
 

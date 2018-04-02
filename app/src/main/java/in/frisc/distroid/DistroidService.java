@@ -12,14 +12,24 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.koushikdutta.async.Util;
+
 import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
+
+import javax.crypto.NoSuchPaddingException;
+
+import in.frisc.distroid.utils.EncryptionDecryption;
+import in.frisc.distroid.utils.FileSplitCombine;
 
 public class DistroidService extends Service {
     private static final String TAG = "DISTROID SERVICE";
     FileObserver observer;
     SharedPreferences sharedPreferences;
     String folderPath;
-
+    public static long thresholdSize =  30;
     DistroidServer distroidServer;
 
 
@@ -71,18 +81,37 @@ public class DistroidService extends Service {
 
         observer = new FileObserver(folderPath ) { // set up a file observer to watch this directory on sd card
             @Override
-            public void onEvent(int event, String file) {
+            public void onEvent(int event, String fileName) {
 
-                if(event == FileObserver.CREATE && !file.equals(".probe")){ // check if its a "create" and not equal to .probe because thats created every time camera is launched
-                    final String msg = "Distroid: New file created [" + folderPath + "/" + file + "]";
-                    Log.d(TAG, msg);
+                if((event == FileObserver.CREATE || event == FileObserver.MOVED_TO) && !fileName.equals(".probe")){ // check if its a "create" and not equal to .probe because thats created every time camera is launched
+                    final String msg = "Distroid: New file found: " + fileName +  " Initiating distribution algorithm!";
+                    final File cur = new File(folderPath + File.separator + fileName);
+                    Log.d(TAG, msg + String.valueOf(cur.length()) + String.valueOf(cur.exists())+ String.valueOf(cur.getAbsolutePath()));
+
+                    File cacheDirectory = new File(folderPath + File.separator + ".cache");
+                    if (! cacheDirectory.exists()){
+                        cacheDirectory.mkdir();
+                        // If you require it to make the entire directory path including parents,
+                        // use directory.mkdirs(); here instead.
+                    }
                     (new Handler(Looper.getMainLooper())).post(new Runnable() {
                         @Override
                         public void run() {
+//
+//                            if(cur.length() > thresholdSize * 1024) {
+                            try {
+                                List<String> splitFiles = FileSplitCombine.splitFile(cur, 10 * 1024, folderName + File.separator + ".cache");
+                                EncryptionDecryption.encryptAllChunks(sharedPreferences.getString("secret_key", "NONE"),splitFiles, folderPath);
+
+                            } catch (Exception e){
+                                Toast.makeText(DistroidService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                e.printStackTrace();
+                            }
+//                            }
                             Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
                         }
                     });
-                    distributeToNetwork(file);
+                    distributeToNetwork(fileName);
 //                    fileSaved = "New photo Saved: " + file;
                 }
             }
@@ -91,6 +120,7 @@ public class DistroidService extends Service {
     }
 
     private void distributeToNetwork(String file) {
+
 
     }
 

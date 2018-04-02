@@ -4,11 +4,18 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by irshad on 08/03/18.
@@ -83,4 +90,35 @@ public class Utils {
     public static void startServer() {
 
     }
+
+    public static List<String> splitFile(File f, int sizeOfFiles, String outputFolder) throws IOException {
+        int partCounter = 1;//I like to name parts from 001, 002, 003, ...
+        //you can change it to 0 if you want 000, 001, ...
+
+        List<String> results = new ArrayList<>();
+
+        byte[] buffer = new byte[sizeOfFiles];
+
+        String fileName = f.getName();
+
+        //try-with-resources to ensure closing stream
+        try (FileInputStream fis = new FileInputStream(f);
+             BufferedInputStream bis = new BufferedInputStream(fis)) {
+
+            int bytesAmount = 0;
+            while ((bytesAmount = bis.read(buffer)) > 0) {
+                //write each chunk of data into separate file with different number in name
+                String filePartName = String.format(Locale.ENGLISH, "%s.%03d", fileName, partCounter++);
+                results.add(filePartName);
+                File newFile = new File(f.getParent() + File.separator + ".cache", filePartName);
+                try (FileOutputStream out = new FileOutputStream(newFile)) {
+                    out.write(buffer, 0, bytesAmount);
+                }
+            }
+            return results;
+
+        }
+    }
+
+
 }
