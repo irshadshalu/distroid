@@ -1,6 +1,7 @@
 package in.frisc.distroid;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.FileObserver;
@@ -21,6 +22,8 @@ import java.util.List;
 
 import javax.crypto.NoSuchPaddingException;
 
+import co.jasonwyatt.squeaky.Database;
+import in.frisc.distroid.database.FilesTable;
 import in.frisc.distroid.utils.EncryptionDecryption;
 import in.frisc.distroid.utils.FileSplitCombine;
 
@@ -31,10 +34,12 @@ public class DistroidService extends Service {
     String folderPath;
     public static long thresholdSize =  30;
     DistroidServer distroidServer;
+    Context mContext;
 
 
     @Override
     public void onCreate() {
+        mContext = this;
         HandlerThread thread = new HandlerThread("ServiceStartArguments",
                 Thread.NORM_PRIORITY);
         thread.start();
@@ -87,6 +92,9 @@ public class DistroidService extends Service {
                     final String msg = "Distroid: New file found: " + fileName +  " Initiating distribution algorithm!";
                     final File cur = new File(folderPath + File.separator + fileName);
                     Log.d(TAG, msg + String.valueOf(cur.length()) + String.valueOf(cur.exists())+ String.valueOf(cur.getAbsolutePath()));
+
+                    // in your Application's or Activity's onCreate() method
+
 
                     File cacheDirectory = new File(folderPath + File.separator + ".cache");
                     if (! cacheDirectory.exists()){

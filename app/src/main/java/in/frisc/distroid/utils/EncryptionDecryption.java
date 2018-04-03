@@ -17,9 +17,15 @@ import javax.crypto.spec.SecretKeySpec;
 public class EncryptionDecryption {
     public static void encryptAllChunks(String key, List<String> filePaths, String folderPath) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         int k = filePaths.size();
+        File cacheDirectory = new File(folderPath + File.separator + ".encrypted");
+        if (! cacheDirectory.exists()){
+            cacheDirectory.mkdir();
+            // If you require it to make the entire directory path including parents,
+            // use directory.mkdirs(); here instead.
+        }
         for (int i = 0; i < k; i++) {
             FileInputStream fis = new FileInputStream(filePaths.get(i));
-            FileOutputStream fos = new FileOutputStream(folderPath + File.separator + ".encrypted " + String.valueOf(i));
+            FileOutputStream fos = new FileOutputStream(folderPath + File.separator + ".encrypted/temp_" +  String.valueOf(i));
 
             SecretKeySpec sks = new SecretKeySpec(key.getBytes(), "AES");
 

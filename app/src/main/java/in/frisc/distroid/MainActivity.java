@@ -20,6 +20,10 @@ import java.io.File;
 import java.security.SecureRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
+import co.jasonwyatt.squeaky.Database;
+import in.frisc.distroid.database.DeviceTable;
+import in.frisc.distroid.database.FileChunksTable;
+import in.frisc.distroid.database.FilesTable;
 import in.frisc.distroid.utils.RandomString;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
             RandomString gen = new RandomString(32, new SecureRandom());
             sharedPreferences.edit().putString("secret_key", gen.nextString()).apply();
 
+
+            Database myDb = new Database(mContext, "myfiles");
+
+            myDb.addTable(new FilesTable());
+            myDb.addTable(new FileChunksTable());
+            myDb.addTable(new DeviceTable());
+            myDb.prepare();
+
             AlertDialog alertDialog = new AlertDialog.Builder(mContext).create();
             alertDialog.setTitle("Key Generated");
             alertDialog.setMessage("Device initiated with Distroid!. Private key generated and stored securely.");
@@ -65,9 +77,7 @@ public class MainActivity extends AppCompatActivity {
                     });
             alertDialog.show();
         }
-
         final String folderName = sharedPreferences.getString(getString(R.string.key_backup_directory), "DistroidTest");
-        Toast.makeText(getApplicationContext(), "Service started", Toast.LENGTH_SHORT).show();
         String folderPath = android.os.Environment.getExternalStorageDirectory().toString() + "/" + folderName;
         File directory = new File(folderPath);
         if (! directory.exists()){
