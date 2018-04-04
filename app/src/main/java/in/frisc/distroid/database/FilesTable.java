@@ -5,7 +5,7 @@ import co.jasonwyatt.squeaky.Table;
 public class FilesTable extends Table {
     @Override
     public String getName() {
-        return "myfiles";
+        return "files";
     }
 
     @Override
@@ -16,11 +16,12 @@ public class FilesTable extends Table {
     @Override
     public String[] getCreateTable() {
         return new String[] {
-            "CREATE TABLE myfiles ("+
-            "    path TEXT NOT NULL"+
-            "    id INTEGER NOT NULL PRIMARY KEY"+
-            "    directory TEXT NOT NULL"+
-            "    size INTEGER NOT NULL"+
+            "CREATE TABLE files (" +
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "    path TEXT NOT NULL," +
+            "    name TEXT NOT NULL," +
+            "    thumbnail TEXT NOT NULL," +
+            "    size INTEGER NOT NULL" +
             ")"
         };
     }

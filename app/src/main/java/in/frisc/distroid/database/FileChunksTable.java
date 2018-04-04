@@ -5,7 +5,7 @@ import co.jasonwyatt.squeaky.Table;
 public class FileChunksTable extends Table {
     @Override
     public String getName() {
-        return "myfilechunks";
+        return "filechunks";
     }
 
     @Override
@@ -16,10 +16,10 @@ public class FileChunksTable extends Table {
     @Override
     public String[] getCreateTable() {
         return new String[] {
-            "CREATE TABLE myfilechunks ("+
-            "    path TEXT NOT NULL"+
-            "    id INTEGER NOT NULL PRIMARY KEY"+
-            "    file_id INTEGER NOT NULL"+
+            "CREATE TABLE filechunks ("+
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT,"+
+            "    path TEXT NOT NULL,"+
+            "    file_id INTEGER NOT NULL,"+
             "    device_present INTEGER NOT NULL"+
             ")"
         };

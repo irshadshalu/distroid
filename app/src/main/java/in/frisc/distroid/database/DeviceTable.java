@@ -17,8 +17,8 @@ public class DeviceTable extends Table {
     public String[] getCreateTable() {
         return new String[] {
             "CREATE TABLE devices ("+
+            "    id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "    ip TEXT NOT NULL"+
-            "    id INTEGER NOT NULL PRIMARY KEY"+
             ")"
         };
     }
@@ -27,4 +27,5 @@ public class DeviceTable extends Table {
     public String[] getMigration(int nextVersion) {
         return new String[0];
     }
+
 }

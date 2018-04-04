@@ -4,21 +4,41 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.ThumbnailUtils;
+import android.provider.MediaStore;
 import android.provider.Settings;
 
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Request;
+import com.squareup.picasso.RequestHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.Random;
 
 /**
- * Created by Sri on 18/12/16.
+ * Created by irshad on 16/11/17.
  */
 
-public class Utils2 {
+public class VideoRequestHandler extends RequestHandler {
+    public static String SCHEME_VIDEO="video";
+    @Override
+    public boolean canHandleRequest(Request data)
+    {
+        String scheme = data.uri.getScheme();
+        return (SCHEME_VIDEO.equals(scheme));
+    }
 
+    @Override
+    public Result load(Request data, int arg1) throws IOException
+    {
+        Bitmap bm = ThumbnailUtils.createVideoThumbnail(data.uri.getPath(), MediaStore.Images.Thumbnails.MINI_KIND);
+        return new Result(bm, Picasso.LoadedFrom.DISK);
+    }
 
     public final static long ONE_SECOND = 1000;
     public final static long ONE_MINUTE = ONE_SECOND * 60;
@@ -119,14 +139,5 @@ public class Utils2 {
             macAddress[i] = Integer.decode("0x" + mac[i]).byteValue();
         }
         return macAddress;
-    }
-
-    public static class MessageEvent {
-        public MessageEvent(int type, String msg){
-            this.type = type;
-            this.msg = msg;
-        }
-        public int type;
-        public String msg;
     }
 }

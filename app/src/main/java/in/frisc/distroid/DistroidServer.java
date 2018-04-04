@@ -8,6 +8,9 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
+
+import okhttp3.internal.Util;
 
 /**
  * Created by irshad on 08/03/18.
@@ -23,7 +26,7 @@ public class DistroidServer extends NanoHTTPD{
     }
 
     public DistroidServer(Context context,  int port) {
-        super(port);
+        super(null, port);
         mContext = context;
         try {
             start();
@@ -35,15 +38,17 @@ public class DistroidServer extends NanoHTTPD{
     }
 
 
+
     @Override
     public Response serve(IHTTPSession session) {
         Response res = null;
+        Log.w(TAG, "Connection req");
         try {
 
             String url = session.getUri();
             Log.d(TAG, "request uri: " + url);
-            if (TextUtils.isEmpty(url) || url.equals("/") || url.contains("/open"))
-                res = createHtmlResponse();
+            if (TextUtils.isEmpty(url) || url.equals("/") || url.contains("/register"))
+                res = createHtmlResponse(session.getHeaders().get("remote-addr"));
 //            else if (url.equals("/status"))
 //                res = new NanoHTTPD.Response(Response.Status.OK, NanoHTTPD.MIME_PLAINTEXT, "Available");
 //            else if (url.equals("/apk"))
@@ -59,6 +64,7 @@ public class DistroidServer extends NanoHTTPD{
 //            }
         } catch (Exception ioe) {
             ioe.printStackTrace();
+            Log.w(TAG, "IOE: " + ioe.toString());
             res = createErrorResponse(Response.Status.FORBIDDEN, ioe.getMessage());
         } finally {
             if (null == res)
@@ -67,11 +73,17 @@ public class DistroidServer extends NanoHTTPD{
         res.addHeader("Accept-Ranges", "bytes");
         res.addHeader("Access-Control-Allow-Origin", "*");
         res.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        Log.w(TAG, session.getHeaders().get("remote-addr"));
         return res;
     }
 
-    private Response createHtmlResponse() {
-        String answer = "";
+    private Response createHtmlResponse(String clientIp) {
+        StringBuilder answer = new StringBuilder();
+        for(int i = 0; i < Utils.connectedIps.size(); i++){
+            answer.append(Utils.connectedIps.get(i) + "\n");
+
+        }
+        Utils.connectedIps.add(clientIp);
 //        try {
 //            BufferedReader reader = new BufferedReader(
 //                    new InputStreamReader(mContext.getAssets().open("web_talk.html")));
@@ -82,7 +94,7 @@ public class DistroidServer extends NanoHTTPD{
 //        } catch (IOException ioe) {
 //            Log.e("NanoHTTPD", ioe.toString());
 //        }
-        return new NanoHTTPD.Response("HELLO WORLD");
+        return new NanoHTTPD.Response(answer.toString());
     }
 
     private Response createErrorResponse(Response.Status status, String message) {

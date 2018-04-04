@@ -14,7 +14,14 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.koushikdutta.async.Util;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.security.SecureRandom;
@@ -25,12 +32,14 @@ import in.frisc.distroid.database.DeviceTable;
 import in.frisc.distroid.database.FileChunksTable;
 import in.frisc.distroid.database.FilesTable;
 import in.frisc.distroid.utils.RandomString;
+import in.frisc.distroid.utils.Utils2;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
     Context mContext;
     SharedPreferences sharedPreferences;
+    File directory;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +60,21 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
         }
 
+
+        Utils.myDb = new Database(mContext, "myfiles");
+
+        Utils.myDb.addTable(new FilesTable());
+        Utils.myDb.addTable(new FileChunksTable());
+        Utils.myDb.addTable(new DeviceTable());
+        Utils.myDb.prepare();
+
+        if(!Utils.isServer && !Utils.serverIP.equals("NONE")){
+            ((TextView) findViewById(R.id.connection_status)).setText("Connected to: " + Utils.serverIP);
+        }
+        else{
+
+        }
+
         // Key generation code
         if(sharedPreferences.getString("secret_key","NONE").equals("NONE")){
 
@@ -58,13 +82,6 @@ public class MainActivity extends AppCompatActivity {
             RandomString gen = new RandomString(32, new SecureRandom());
             sharedPreferences.edit().putString("secret_key", gen.nextString()).apply();
 
-
-            Database myDb = new Database(mContext, "myfiles");
-
-            myDb.addTable(new FilesTable());
-            myDb.addTable(new FileChunksTable());
-            myDb.addTable(new DeviceTable());
-            myDb.prepare();
 
             AlertDialog alertDialog = new AlertDialog.Builder(mContext).create();
             alertDialog.setTitle("Key Generated");
@@ -79,12 +96,13 @@ public class MainActivity extends AppCompatActivity {
         }
         final String folderName = sharedPreferences.getString(getString(R.string.key_backup_directory), "DistroidTest");
         String folderPath = android.os.Environment.getExternalStorageDirectory().toString() + "/" + folderName;
-        File directory = new File(folderPath);
+        directory = new File(folderPath);
         if (! directory.exists()){
             directory.mkdir();
             // If you require it to make the entire directory path including parents,
             // use directory.mkdirs(); here instead.
         }
+
         Utils.getNetworkIPs();
     }
 
@@ -112,4 +130,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(Utils2.MessageEvent event) {
+        if(event.type == 1){
+            try{
+                ((TextView) findViewById(R.id.connection_status)).setText("Connected to: " + Utils.serverIP);
+            }
+            catch (Exception e){}
+        }
+        if(event.type == 2){
+            ((TextView) findViewById(R.id.console))
+                    .setText(((TextView) findViewById(R.id.console))
+                            .getText() + event.msg + "\n");
+        }
+    };
+
+    public void openGallery(View view) {
+        Utils.readFiles(directory);
+        startActivity(new Intent(this, GalleryActivity.class));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
 }

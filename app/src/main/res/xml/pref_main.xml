@@ -12,6 +12,7 @@
         android:summary="Enter the upload frequency in minutes"
         android:title="Upload Frequency (mins)" />
 
+
     <EditTextPreference
         android:defaultValue="90"
         android:key="@string/key_storage_threshold"
@@ -25,6 +26,11 @@
         android:summary="Amount of storage to share in MB"
         android:title="Storage to share (MB)"
         android:inputType="number"
+        />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="optimize_automatically"
+        android:title="Automate optimization"
         />
 
 </PreferenceScreen>

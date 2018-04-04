@@ -1,6 +1,8 @@
 package in.frisc.distroid;
 
 import android.util.Log;
+
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -39,6 +41,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 
+import in.frisc.distroid.FileTransferStatusListener;
+import in.frisc.distroid.Utils;
 import in.frisc.distroid.utils.Utils2;
 
 /**
@@ -85,11 +89,7 @@ import in.frisc.distroid.utils.Utils2;
  * <p/>
  * See the separate "LICENSE.md" file for the distribution license (Modified BSD licence)
  */
-
-
 public abstract class NanoHTTPD {
-
-
 
     private static final String TAG = "NanoHTTPD";
     /**
@@ -275,7 +275,7 @@ public abstract class NanoHTTPD {
 
     public final int getIpAddress() {
         try {
-            return myServerSocket == null ? -1 : inetAddressToInt(myServerSocket.getInetAddress());
+            return myServerSocket == null ? -1 : WifiUtils.inetAddressToInt(myServerSocket.getInetAddress());
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "exception in getIpAddress: " + e.getMessage());
@@ -1498,25 +1498,6 @@ public abstract class NanoHTTPD {
                 response.addHeader("Set-Cookie", cookie.getHTTPHeader());
             }
         }
-    }
-
-
-    public static int inetAddressToInt(InetAddress inetAddr)
-            throws IllegalArgumentException {
-        byte[] addr = inetAddr.getAddress();
-        if (addr.length != 4) {
-            throw new IllegalArgumentException("Not an IPv4 address");
-        }
-        return ((addr[3] & 0xff) << 24) | ((addr[2] & 0xff) << 16) |
-                ((addr[1] & 0xff) << 8) | (addr[0] & 0xff);
-    }
-
-
-    interface FileTransferStatusListener {
-        void onBytesTransferProgress(String ip, String fileName, long totalSize, String spped, long currentSize, int percentageUploaded);
-        void onBytesTransferCompleted(String ip, String fileName);
-        void onBytesTransferStarted(String ip, String fileName);
-        void onBytesTransferCancelled(String ip, String error, String fileName);
     }
 
 }

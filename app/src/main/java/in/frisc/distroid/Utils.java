@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,18 +15,27 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+
+import co.jasonwyatt.squeaky.Database;
+import in.frisc.distroid.dummy.DummyContent;
 
 /**
  * Created by irshad on 08/03/18.
  */
 
 public class Utils {
+
+    public static List<String> connectedIps = new ArrayList<>();
     private static final String TAG = "UTILS DISTROID";
+    public static Database myDb;
 
     public static final int DISTROID_PORT = 52287;
     public static String serverIP = "NONE";
+    public static boolean isServer = false;
 
     public static void getNetworkIPs() {
 
@@ -119,6 +129,56 @@ public class Utils {
 
         }
     }
+
+
+    public static boolean readFiles(File directory){
+
+        try {
+            final File[] files = directory.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    String pathname = file.getName().toLowerCase();
+                    boolean isVideoOrImage = pathname.endsWith(".jpg")
+                            || pathname.endsWith(".mp4")
+                            || pathname.endsWith(".png")
+                            || pathname.endsWith(".gif")
+                            || pathname.endsWith(".jpeg")
+                            || pathname.endsWith(".m4a")
+                            || pathname.endsWith(".3gp")
+                            || pathname.endsWith(".avi")
+                            || pathname.endsWith(".mp4")
+                            || pathname.endsWith(".mkv");
+                    return isVideoOrImage && file.isFile();
+                }
+            });
+
+            Arrays.sort( files, new Comparator()
+            {
+                public int compare(Object o1, Object o2) {
+
+                    if (((File)o1).lastModified() > ((File)o2).lastModified()) {
+                        return -1;
+                    } else if (((File)o1).lastModified() < ((File)o2).lastModified()) {
+                        return +1;
+                    } else {
+                        return 0;
+                    }
+                }
+
+            });
+//                new Thread(new Runnable() {
+//                    public void run() {
+            DummyContent.makeStatuses(files);
+//                    }
+//                }).start();
+            return true;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
 
 }

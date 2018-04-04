@@ -14,6 +14,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.koushikdutta.async.Util;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.Response;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +31,7 @@ import co.jasonwyatt.squeaky.Database;
 import in.frisc.distroid.database.FilesTable;
 import in.frisc.distroid.utils.EncryptionDecryption;
 import in.frisc.distroid.utils.FileSplitCombine;
+import in.frisc.distroid.utils.Utils2;
 
 public class DistroidService extends Service {
     private static final String TAG = "DISTROID SERVICE";
@@ -61,6 +67,7 @@ public class DistroidService extends Service {
                         @Override
                         public void run() {
                             Toast.makeText(getApplicationContext(), "New server created", Toast.LENGTH_SHORT).show();
+                            Utils.isServer = true;
                         }
                     });
                 }
@@ -71,11 +78,37 @@ public class DistroidService extends Service {
                         public void run() {
                             Toast.makeText(getApplicationContext(), "Connected to existing temporary server: "+ Utils.serverIP, Toast.LENGTH_SHORT).show();
 
+                            EventBus.getDefault().postSticky(new Utils2.MessageEvent(1, "hello"));
+                            String uri = "http://" + Utils.serverIP + ":" + String.valueOf(Utils.DISTROID_PORT) ;
+
+                            EventBus.getDefault().postSticky(new Utils2.MessageEvent(2, uri));
+                            Ion.with(mContext)
+                                    .load(uri)
+                                    .setLogging(TAG,Log.VERBOSE)
+                                    .asString()
+                                    .withResponse()
+                                    .setCallback(new FutureCallback<Response<String>>() {
+                                        @Override
+                                        public void onCompleted(Exception e, Response<String> result) {
+                                            if(e == null){
+                                                Log.w(TAG, result.getResult());
+
+                                                EventBus.getDefault().postSticky(new Utils2.MessageEvent(2, result.getResult()));
+                                            }
+                                            else{
+                                                Log.wtf(TAG, e.toString());
+
+                                                EventBus.getDefault().postSticky(new Utils2.MessageEvent(2, e.toString()));
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    });
+
                         }
                     });
                 }
             }
-        },10000);
+        },5000);
 
         File directory = new File(folderPath);
         if (! directory.exists()){
@@ -86,16 +119,16 @@ public class DistroidService extends Service {
 
         observer = new FileObserver(folderPath ) { // set up a file observer to watch this directory on sd card
             @Override
-            public void onEvent(int event, String fileName) {
+            public void onEvent(int event, final String fileName) {
 
                 if((event == FileObserver.CREATE || event == FileObserver.MOVED_TO) && !fileName.equals(".probe")){ // check if its a "create" and not equal to .probe because thats created every time camera is launched
+
                     final String msg = "Distroid: New file found: " + fileName +  " Initiating distribution algorithm!";
                     final File cur = new File(folderPath + File.separator + fileName);
                     Log.d(TAG, msg + String.valueOf(cur.length()) + String.valueOf(cur.exists())+ String.valueOf(cur.getAbsolutePath()));
-
-                    // in your Application's or Activity's onCreate() method
-
-
+//                    if(!sharedPreferences.getBoolean("optimize_automatically", false)){
+//                        return;
+//                    }
                     File cacheDirectory = new File(folderPath + File.separator + ".cache");
                     if (! cacheDirectory.exists()){
                         cacheDirectory.mkdir();
@@ -108,7 +141,11 @@ public class DistroidService extends Service {
 //
 //                            if(cur.length() > thresholdSize * 1024) {
                             try {
-                                List<String> splitFiles = FileSplitCombine.splitFile(cur, 10 * 1024, folderName + File.separator + ".cache");
+
+                                if(Utils.myDb != null) {
+                                    Utils.myDb.insert("INSERT INTO files (path, name, thumbnail, size) VALUES (?,?,?,?)", folderPath, fileName, "NONE", cur.length());
+                                }
+                                List<String> splitFiles = FileSplitCombine.splitFile(cur, (int) (cur.length() / 30), folderName + File.separator + ".cache");
                                 EncryptionDecryption.encryptAllChunks(sharedPreferences.getString("secret_key", "NONE"),splitFiles, folderPath);
 
                             } catch (Exception e){
@@ -128,8 +165,6 @@ public class DistroidService extends Service {
     }
 
     private void distributeToNetwork(String file) {
-
-
     }
 
     @Override
